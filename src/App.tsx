@@ -3,11 +3,17 @@ import './App.css';
 
 // Define a tipagem para os objetos de post que virão da API
 // Isso ajuda a evitar erros e melhora a autocompletação do código.
+interface PostPhoto {
+  url: string;
+  alt?: string;
+}
+
 interface Post {
   id: number;
   userId: number;
   title: string;
   body: string;
+  photo?: PostPhoto;
 }
 
 // Interface para os usuários
@@ -214,6 +220,12 @@ const App: React.FC = () => {
           <div className="posts-grid">
             {posts.map((post) => (
               <div key={post.id} className="post-card">
+                <img
+                  src={`https://picsum.photos/400/200?random=${post.id}`}
+                  alt={post.title}
+                  className="post-photo"
+                  style={{ width: '100%', borderRadius: '0.5rem', marginBottom: '1rem', objectFit: 'cover', maxHeight: '200px' }}
+                />
                 <h2 className="post-title">
                   {post.title}
                 </h2>
