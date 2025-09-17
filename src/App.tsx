@@ -51,6 +51,22 @@ const App: React.FC = () => {
   const [loadingUsers, setLoadingUsers] = useState<boolean>(true);
   // Estado para erro dos usuários
   const [errorUsers, setErrorUsers] = useState<string | null>(null);
+  
+    // Interface para comentários
+    interface Comment {
+      postId: number;
+      id: number;
+      name: string;
+      email: string;
+      body: string;
+    }
+  
+    // Estado para armazenar comentários por postId
+    const [comments, setComments] = useState<{ [key: number]: Comment[] }>({});
+    // Estado para controlar carregamento dos comentários
+    const [loadingComments, setLoadingComments] = useState<boolean>(true);
+    // Estado para erro dos comentários
+    const [errorComments, setErrorComments] = useState<string | null>(null);
 
   // useEffect é usado para executar efeitos colaterais em componentes funcionais.
   useEffect(() => {
@@ -75,6 +91,34 @@ const App: React.FC = () => {
     };
     fetchPosts();
   }, []);
+  
+    // Buscar comentários dos posts
+    useEffect(() => {
+      const fetchComments = async () => {
+        try {
+          if (posts.length === 0) return;
+          const allComments: { [key: number]: Comment[] } = {};
+          for (const post of posts) {
+            const response = await fetch(`https://jsonplaceholder.typicode.com/comments?postId=${post.id}`);
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data: Comment[] = await response.json();
+            allComments[post.id] = data;
+          }
+          setComments(allComments);
+        } catch (e) {
+          if (e instanceof Error) {
+            setErrorComments(e.message);
+          } else {
+            setErrorComments('Ocorreu um erro desconhecido');
+          }
+        } finally {
+          setLoadingComments(false);
+        }
+      };
+      fetchComments();
+    }, [posts]);
 
   // Buscar usuários
   useEffect(() => {
@@ -106,6 +150,14 @@ const App: React.FC = () => {
       </div>
     );
   }
+  
+    if (loadingComments) {
+      return (
+        <div className="loading-screen">
+          <p className="loading-text">Carregando comentários...</p>
+        </div>
+      );
+    }
 
   if (loadingUsers) {
     return (
@@ -130,6 +182,14 @@ const App: React.FC = () => {
       </div>
     );
   }
+  
+    if (errorComments) {
+      return (
+        <div className="error-screen">
+          <p className="error-text">Erro ao buscar comentários: {errorComments}</p>
+        </div>
+      );
+    }
 
   return (
     <>
@@ -163,6 +223,19 @@ const App: React.FC = () => {
                 <span className="user-id-badge">
                   Usuário: {users.find(u => u.id === post.userId)?.name || `ID: ${post.userId}`}
                 </span>
+                <div className="comments-section">
+                  <h4>Comentários:</h4>
+                  {comments[post.id]?.length ? (
+                    comments[post.id].map((comment) => (
+                      <div key={comment.id} className="comment-card">
+                        <strong>{comment.name}</strong> <span>({comment.email})</span>
+                        <p>{comment.body}</p>
+                      </div>
+                    ))
+                  ) : (
+                    <p>Nenhum comentário.</p>
+                  )}
+                </div>
               </div>
             ))}
           </div>
